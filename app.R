@@ -12,7 +12,7 @@ library(thematic)
 library(ragg)
 library(DT)
 library(scales)
-library(trelliscopejs)
+
 
 
 library(readxl)
@@ -188,11 +188,9 @@ server_comprice <- function(input, output, session){
       filter(indicator==input$indicator) %>% 
       filter(indicator_pc==input$indicator_pc)
     
-    
-    
   })
   
-  # create data for table
+   # create data for table
   table_data <- reactive({
     data() %>% 
       select(commodity, month_year, price) %>% 
@@ -224,8 +222,9 @@ server_comprice <- function(input, output, session){
         # breaks = scales::breaks_width("3 months"), 
         labels = scales::label_date_short()
       ) +
-      labs(title = glue::glue("Selected Commodities for the period {input$start_date} to {input$end_date}"),
-           y = input$indicator
+      labs(title = glue::glue(" {input$indicator} for Selected Commodities for the Period {input$start_date} to {input$end_date}"),
+           y = input$indicator,
+           caption = "World Bank Commodity Price Data (The Pink Sheet)"
       )+
       #  theme_bw()+
       facet_wrap(vars(commodity),
@@ -254,8 +253,9 @@ server_comprice <- function(input, output, session){
       ggplot(aes(x=date, y=percent_change , colour=commodity ))+
       geom_line()+
       scale_y_continuous(labels = scales::percent)+
-      labs(title = glue::glue("Selected Commodities for the period {input$start_date} to {input$end_date}"),
-           y = input$indicator_pc
+      labs(title = glue::glue(" {input$indicator_pc} of {input$indicator} for Selected Commodities for the period {input$start_date} to {input$end_date}"),
+           y = input$indicator_pc,
+           caption = "World Bank Commodity Price Data (The Pink Sheet)"
       )+
       #theme_bw()+
       facet_wrap(vars(commodity), ncol = 3 ,scales = "free", labeller = label_wrap_gen(50))
@@ -264,30 +264,29 @@ server_comprice <- function(input, output, session){
   })
   
   
-  
   output$table_Price <- DT::renderDataTable({
     check()
     
-    
-    # month_data <-  data() %>% 
-    #    select(commodity, month_year, price, percent_change) %>% 
-    #    pivot_wider(names_from = month_year, values_from = c(price, percent_change))
-    #    
     
     datatable( table_data(),
                
                filter = 'top', 
                
-               caption = htmltools::tags$caption(
-                 style = 'caption-side: bottom; text-align: center;',
-                 'Source: ', htmltools::em('World Bank Commodity Monthly Prices')
-               ),
-               extensions = 'Buttons', options = list(
+              
+                caption = htmltools::tags$caption(
+                 style = 'caption-side: top; text-align: center;',
+                 htmltools::em(glue::glue('World Bank Commodity Price Data: {input$indicator} for Selected Commodities for the period {input$start_date} to {input$end_date}
+                                                                                                            ')),
+                                ),
+               
+               
+               extensions = 'Buttons', 
+               options = list(
                  pageLength = 15, autoWidth = TRUE,
-                 
                  dom = 'Bfrtip',
                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
                )
+               
                
     ) %>% 
       formatCurrency(2:ncol(table_data()), currency = "$") 
@@ -312,8 +311,8 @@ server_comprice <- function(input, output, session){
                filter = 'top', 
                
                caption = htmltools::tags$caption(
-                 style = 'caption-side: bottom; text-align: center;',
-                 'Source: ', htmltools::em('World Bank Commodity Monthly Prices')
+                 style = 'caption-side: top; text-align: center;',
+                 htmltools::em(glue::glue('World Bank Commodity Price Data: {input$indicator_pc} of {input$indicator} for Selected Commodities for the period {input$start_date} to {input$end_date}'))
                ),
                extensions = 'Buttons', options = list(
                  pageLength = 15, autoWidth = TRUE,
@@ -340,7 +339,7 @@ server_comprice <- function(input, output, session){
 shinyApp(ui=ui_comprice, server = server_comprice)
 
 
-library(rsconnect)
-rsconnect::deployApp("D:/Learn/PROJECTS/APP/commodity_price_app")
+
+
 
 
